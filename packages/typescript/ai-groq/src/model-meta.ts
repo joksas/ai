@@ -1,4 +1,5 @@
 import type { GroqTextProviderOptions } from './text/text-provider-options'
+import type { GroqTranscriptionProviderOptions } from './audio/transcription-provider-options'
 
 /**
  * Internal metadata structure describing a Groq model's capabilities and pricing.
@@ -14,7 +15,7 @@ interface ModelMeta<TProviderOptions = unknown> {
   supports: {
     input: Array<'text' | 'image' | 'audio'>
     output: Array<'text' | 'audio'>
-    endpoints: Array<'chat' | 'tts' | 'transcription' | 'batch'>
+    endpoints: Array<'chat' | 'tts' | 'transcription' | 'translation' | 'batch'>
 
     features: Array<
       | 'streaming'
@@ -315,6 +316,55 @@ const QWEN3_32B = {
     tools: [] as const,
   },
 } as const satisfies ModelMeta<GroqTextProviderOptions>
+
+/**
+ * Whisper Large v3 — Groq's premium speech-to-text model.
+ * Supports both transcription and translation. Priced per hour of audio.
+ * @see https://console.groq.com/docs/speech-to-text
+ */
+const WHISPER_LARGE_V3 = {
+  name: 'whisper-large-v3',
+  pricing: {
+    // Audio models on Groq are billed per hour of audio, not per token.
+    input: { normal: 0.111 },
+  },
+  supports: {
+    input: ['audio'],
+    output: ['text'],
+    endpoints: ['transcription', 'translation'],
+    features: [],
+    tools: [] as const,
+  },
+} as const satisfies ModelMeta<GroqTranscriptionProviderOptions>
+
+/**
+ * Whisper Large v3 Turbo — Groq's fastest speech-to-text model.
+ * Transcription only (no translation endpoint).
+ * @see https://console.groq.com/docs/speech-to-text
+ */
+const WHISPER_LARGE_V3_TURBO = {
+  name: 'whisper-large-v3-turbo',
+  pricing: {
+    input: { normal: 0.04 },
+  },
+  supports: {
+    input: ['audio'],
+    output: ['text'],
+    endpoints: ['transcription'],
+    features: [],
+    tools: [] as const,
+  },
+} as const satisfies ModelMeta<GroqTranscriptionProviderOptions>
+
+/**
+ * All supported Groq transcription (speech-to-text) model identifiers.
+ */
+export const GROQ_TRANSCRIPTION_MODELS = [
+  WHISPER_LARGE_V3.name,
+  WHISPER_LARGE_V3_TURBO.name,
+] as const
+
+export type GroqTranscriptionModel = (typeof GROQ_TRANSCRIPTION_MODELS)[number]
 
 /**
  * All supported Groq chat model identifiers.
